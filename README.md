@@ -1,16 +1,14 @@
 # Assetrix DevOps Assessment – CI/CD, IaC, Security
 
-I put together a small, clear workflow that mirrors how I usually ship: keep the app simple, automate the boring parts, and default to secure choices. This repo shows my approach end‑to‑end without unnecessary complexity.
-
 ## 🎯 **What This Does**
 
-✅ **Builds** the application (npm install)  
-✅ **Tests** the application (npm test)  
-✅ **Builds Docker image** and pushes to Docker Hub  
-✅ **IaC**: Provisions an EC2 host and runs the container  
-✅ **Security**: CI vulnerability scan with Trivy  
+**Builds** the application (npm install)  
+**Tests** the application (npm test)  
+**Builds Docker image** and pushes to Docker Hub  
+**IaC**: Provisions an EC2 host and runs the container  
+**Security**: CI vulnerability scan with Trivy  
 
-## 🚀 **Quick Start**
+## **Quick Start**
 
 ### **Local Testing**
 
@@ -57,7 +55,7 @@ I put together a small, clear workflow that mirrors how I usually ship: keep the
 
 Why I kept it this way: it’s fast to understand, easy to extend (e.g., add environments), and shows the core signals (build, test, image, scan, publish).
 
-## 🏗️ **Infrastructure as Code (Terraform)**
+## **Infrastructure as Code (Terraform)**
 
 - Directory: `terraform/`
 - What it does: creates a single Ubuntu EC2 instance in the default VPC, opens HTTP/SSH, installs Docker, and runs the app image via user_data (80→3000).
@@ -67,12 +65,12 @@ Why I kept it this way: it’s fast to understand, easy to extend (e.g., add env
 
 Why this path: for an assessment, a minimal EC2 + Docker host communicates the approach clearly without the overhead of a full orchestrator.
 
-## 🛡️ **Security in CI**
+## **Security in CI**
 
 - I added a Trivy scan step after the Docker build.
 - It reports HIGH/CRITICAL findings in logs; it can be made blocking in one line if required.
 
-## SSL/TLS Implementation (Explanation Only)
+## SSL/TLS Implementation
 
 Below is how I would implement SSL/TLS for production web apps on Linode and AWS, keeping it simple, maintainable, and secure.
 
@@ -89,7 +87,7 @@ Below is how I would implement SSL/TLS for production web apps on Linode and AWS
 - Configuration steps (VM with NGINX):
   1. Install NGINX and Certbot on the VM hosting the app or reverse proxy
   2. Configure an NGINX server block for port 80 that only redirects to HTTPS
-  3. Obtain a Let’s Encrypt cert: `certbot --nginx -d example.com -d www.example.com`
+  3. Obtain a Let’s Encrypt cert: `certbot --nginx -d example.com -d www.example.com` 
   4. Enable HTTP/2 on the 443 server block and proxy_pass to the app
 - Automate renewal:
   - Certbot installs a systemd timer/cron by default; verify `systemctl status certbot.timer`
@@ -102,7 +100,7 @@ Below is how I would implement SSL/TLS for production web apps on Linode and AWS
 ### AWS
 - Tools/services:
   - AWS Certificate Manager (ACM) + Application Load Balancer (ALB) or CloudFront
-  - Route 53 for DNS validation (recommended)
+  - Route 53 for DNS validation 
   - Alternatively, EC2 with NGINX + Certbot if not using ALB/CloudFront
 - Configuration steps (ALB + ACM):
   1. Request a public certificate in ACM for `example.com` (+ SANs)
@@ -127,7 +125,7 @@ Below is how I would implement SSL/TLS for production web apps on Linode and AWS
   - Set CloudWatch Alarms or Health Checks for certificate expiry (or use a Lambda that scans ACM and posts to SNS/Slack)
   - Regularly run SSL/TLS scans (e.g., SSL Labs) and review findings as part of release checks
 
-What I’d ship next (nice-to-haves):
+What I’d ship next:
 - Kubernetes ingress with `cert-manager` (ACME DNS-01 via Route 53 or Linode DNS) for automatic issuance/renewal
 - Enforce security gates in CI (fail on HIGH/CRITICAL)
 - Simple certificate‑expiry alerts if ACM isn’t used everywhere
