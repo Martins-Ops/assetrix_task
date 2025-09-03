@@ -1,0 +1,51 @@
+name: Simple CI/CD Pipeline
+
+on:
+  workflow_dispatch:
+    inputs:
+      run_reason:
+        description: "Running Workflow"
+        required: false
+        default: "manual"
+
+jobs:
+  build-test-deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        
+    - name: Install dependencies
+      run: npm ci
+      
+    - name: Run tests
+      run: npm test
+      
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+      
+    - name: Build Docker image
+      run: docker build -t assetrix-demo-app .
+
+    - name: Vulnerability scan with Trivy (HIGH/CRITICAL)
+      uses: aquasecurity/trivy-action@0.20.0
+      with:
+        scan-type: image
+        image-ref: assetrix-demo-app
+        severity: HIGH,CRITICAL
+        ignore-unfixed: true
+        exit-code: '0'
+        format: 'table'
+      
+    - name: Push to Docker Hub
+      run: |
+        echo ${{ secrets.DOCKER_PASSWORD }} | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
+        docker tag assetrix-demo-app ${{ secrets.DOCKER_USERNAME }}/assetrix-demo-app:latest
+        docker push ${{ secrets.DOCKER_USERNAME }}/assetrix-demo-app:latest
